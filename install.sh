@@ -31,6 +31,19 @@ if ! command -v gh >/dev/null; then
   sudo apt-get update -qq && sudo apt-get install -y -qq gh >/dev/null
 fi
 
+if [ "$(awk '/MemTotal/{print $2}' /proc/meminfo)" -lt 3000000 ]; then
+  say "Small server (under 3 GB RAM): adding compressed memory (zram) and a 4 GB swap file"
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq zram-tools >/dev/null
+  printf 'ALGO=zstd\nPERCENT=60\nPRIORITY=100\n' | sudo tee /etc/default/zramswap >/dev/null
+  sudo systemctl enable -q zramswap && sudo systemctl restart zramswap
+  if ! swapon --show=NAME --noheadings | grep -q '^/'; then
+    sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile >/dev/null && sudo swapon /swapfile
+    grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+  fi
+  printf 'vm.swappiness=150\nvm.page-cluster=0\n' | sudo tee /etc/sysctl.d/99-hq-zram.conf >/dev/null
+  sudo sysctl -q --system
+fi
+
 say "2/8 Claude Code"
 export PATH=$HOME/.local/bin:$PATH
 command -v claude >/dev/null || curl -fsSL https://claude.ai/install.sh | bash

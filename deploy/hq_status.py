@@ -166,6 +166,7 @@ def services():
         mem[k] = int(v.split()[0]) // 1024
     return {"core": out, "trader": trader, "trader_running": running,
             "mem": {"total": mem.get("MemTotal", 0), "available": mem.get("MemAvailable", 0)},
+            "swap": {"total": mem.get("SwapTotal", 0), "free": mem.get("SwapFree", 0)}, "cpus": os.cpu_count() or 1,
             "load": os.getloadavg()[0] if hasattr(os, "getloadavg") else 0}
 
 

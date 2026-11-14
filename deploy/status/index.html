@@ -118,25 +118,48 @@ body {
 
 /* ---------- feed ---------- */
 .pushes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 300px; overflow: auto; }
-.pushes li { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: 8px; font-size: 14px; }
-.pushes time { color: var(--mute); font-family: var(--mono); font-size: 12px; padding-top: 2px; }
+.pushes li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: start; font-size: 14px; }
+.pushes time { color: var(--mute); font-size: 12px; padding-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
 
 /* ---------- server ---------- */
-.srv { display: flex; align-items: center; gap: 18px; }
-.gauge { position: relative; width: 108px; height: 108px; flex: none; }
-.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.gauge circle { fill: none; stroke-width: 9; }
-.gauge .track { stroke: rgba(255,255,255,.07); }
-.gauge .arc { stroke: var(--worker); stroke-linecap: round; stroke-dasharray: 263.9; stroke-dashoffset: 263.9; transition: stroke-dashoffset 1.4s cubic-bezier(.2, .8, .2, 1), stroke .4s; filter: drop-shadow(0 0 6px rgba(77, 141, 255, .6)); }
-.gauge .arc.high { stroke: var(--chat); }
-.gauge-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.gauge-text b { font-size: 22px; font-weight: 700; line-height: 1; }
-.gauge-text span { font-size: 11px; color: var(--mute); }
-.signals { display: grid; gap: 6px; font-size: 13px; min-width: 0; }
-.signals div { display: flex; align-items: center; gap: 8px; }
-.signals i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 8px var(--bad); flex: none; }
-.signals i.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-.note { margin: 12px 0 0; color: var(--mute); font-size: 12px; }
+.meters { display: grid; gap: 12px; margin-bottom: 16px; }
+.meter header { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 5px; }
+.meter header span { color: var(--mute); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.07); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--worker); transition: width 1.2s cubic-bezier(.2, .8, .2, 1), background .4s; }
+.bar i.high { background: var(--chat); }
+.signals { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; font-size: 13px; }
+.signals div { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.signals i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); flex: none; }
+.signals i.on { background: var(--ok); }
+
+/* ---------- feed icons, legend, tooltip ---------- */
+.ico { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; }
+.ico svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ico.start { color: var(--cloud); background: rgba(34, 211, 238, .13); }
+.ico.ok { color: var(--ok); background: rgba(74, 222, 128, .13); }
+.ico.bad { color: var(--bad); background: rgba(248, 113, 113, .14); }
+.ico.pause { color: var(--wait); background: rgba(251, 191, 36, .13); }
+.ico.info { color: var(--mute); background: rgba(255,255,255,.06); }
+.legend { position: absolute; top: 14px; right: 16px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 12px; max-width: 60%; font-size: 12px; color: var(--mute); pointer-events: none; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--r); }
+.tip { position: absolute; z-index: 3; max-width: 290px; padding: 10px 12px; border-radius: 12px; background: rgba(9, 14, 32, .95); border: 1px solid var(--edge);
+  box-shadow: 0 14px 34px -12px rgba(0, 0, 0, .8); font-size: 13px; pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity .16s, transform .2s cubic-bezier(.2, .8, .2, 1); }
+.tip.show { opacity: 1; transform: none; }
+.tip b { display: block; font-weight: 600; line-height: 1.35; }
+.tip small { display: block; color: var(--c, var(--mute)); font-size: 12px; margin-bottom: 3px; }
+.tip span { display: block; margin-top: 4px; color: #C9D3F5; font-family: var(--mono); font-size: 12px; }
+.act { cursor: pointer; transition: border-color .2s, box-shadow .3s; }
+.act:hover { border-color: color-mix(in srgb, var(--c) 45%, transparent); }
+.act.focus { border-color: var(--c); box-shadow: 0 12px 32px -14px var(--c); }
+
+/* ---------- browser surfaces ---------- */
+::selection { background: rgba(77, 141, 255, .4); color: #fff; }
+* { scrollbar-width: thin; scrollbar-color: rgba(150, 175, 255, .22) transparent; }
+:focus-visible { outline: 2px solid var(--cloud); outline-offset: 3px; border-radius: 8px; }
+@media (max-width: 640px) { .legend { display: none; } }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -161,17 +184,19 @@ body {
   <section class="tile sky" aria-label="Live map of the agents">
     <canvas id="sky" role="img" aria-label="Agents orbiting the places they run: live chat, server jobs and the Windows PC"></canvas>
     <p class="headline" id="headline" aria-live="polite">Connecting to the server</p>
+    <div class="legend" aria-hidden="true"><span style="--r:var(--developer)"><i></i>Developer</span><span style="--r:var(--researcher)"><i></i>Researcher</span><span style="--r:var(--designer)"><i></i>Designer</span><span style="--r:var(--writer)"><i></i>Writer</span><span style="--r:var(--reviewer)"><i></i>Reviewer</span></div>
+    <div class="tip" id="tip" role="tooltip"></div>
   </section>
   <section class="tile now"><h2>Right now</h2><div class="acts" id="now"></div></section>
   <section class="tile jobs"><h2>Jobs</h2><div class="rows" id="jobs"></div></section>
   <section class="tile feed"><h2>Phone pushes</h2><ul class="pushes" id="feed"></ul></section>
   <section class="tile server"><h2>Server</h2>
-    <div class="srv">
-      <div class="gauge"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="arc" id="memArc" cx="50" cy="50" r="42"/></svg>
-        <div class="gauge-text"><b id="memPct">0%</b><span>memory</span></div></div>
-      <div class="signals" id="signals"></div>
+    <div class="meters">
+      <div class="meter"><header>Memory<span id="memTxt"></span></header><div class="bar"><i id="memBar"></i></div></div>
+      <div class="meter"><header>Spill-over memory (compressed + disk)<span id="swapTxt"></span></header><div class="bar"><i id="swapBar"></i></div></div>
+      <div class="meter"><header>Processor load<span id="loadTxt"></span></header><div class="bar"><i id="loadBar"></i></div></div>
     </div>
-    <p class="note" id="memnote"></p>
+    <div class="signals" id="signals"></div>
   </section>
 </main>
 
@@ -238,7 +263,10 @@ let W = 0, H = 0, data = null, lines = emptyLines();
 const agents = new Map(), parts = [], rings = [], phase = {};
 ST_ALL.forEach(s => phase[s.id] = Math.random() * 6);
 const dust = Array.from({ length: innerWidth < 640 ? 30 : 70 }, () => ({
-  x: Math.random(), y: Math.random(), v: .004 + Math.random() * .012, r: .3 + Math.random() * 1.2, a: .1 + Math.random() * .45 }));
+  x: Math.random(), y: Math.random(), v: .004 + Math.random() * .012, r: .3 + Math.random() * 1.2, a: .1 + Math.random() * .45,
+  tw: .6 + Math.random() * 1.8, ph: Math.random() * 7 }));
+const T0 = performance.now();          // the opening: the places fly out from the core once
+let hits = [], focusKey = null, focusAt = 0, px = 0, py = 0, mx = 0, my = 0;
 
 const sprites = {};
 function glow(hex) {
@@ -272,9 +300,10 @@ function resize() {
 }
 new ResizeObserver(resize).observe(cv);
 
-function geo() {
-  const cx = W / 2, cy = H / 2 - 10, ry = H * .3, rx = Math.min(W * .36, ry * 1.75);
-  return { cx, cy, st: ST.map((s, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / ST.length; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a }; }) };
+function geo(t) {
+  const k = reduced ? 1 : 1 - Math.pow(1 - Math.min(1, (t * 1000 - T0) / 1700), 4);
+  const cx = W / 2, cy = H / 2 - 10, ry = H * .3 * k, rx = Math.min(W * .36, H * .3 * 1.75) * k;
+  return { cx, cy, k, st: ST.map((s, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / ST.length; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a }; }) };
 }
 
 function sync(L) {
@@ -285,22 +314,26 @@ function sync(L) {
     if (!a) { a = { key: t.key, st: s.id, born: now, hphase: Math.random() * 6, helpers: [], x: null, fresh: true }; agents.set(t.key, a); }
     const old = a.helpers;
     Object.assign(a, { label: t.label, busy: !!t.busy, waiting: !!t.waiting, idx: k, n: L[s.id].length, dying: 0 });
-    a.helpers = t.helpers.map((h, j) => ({ role: roleKey(h.role), born: old[j] && old[j].role === roleKey(h.role) ? old[j].born : now }));
+    a.title = t.title; a.doing = t.doing;
+    a.helpers = t.helpers.map((h, j) => ({ role: roleKey(h.role), raw: h.role, task: h.task, born: old[j] && old[j].role === roleKey(h.role) ? old[j].born : now }));
   });
   for (const a of agents.values()) if (!seen.has(a.key) && !a.dying) { a.dying = now; if (a.x != null) nova(a.x, a.y, C[a.st]); }
 }
 
 function draw(t, dt) {
   if (!W) return;
-  const now = t * 1000, g = geo(), S = Math.max(.82, Math.min(1.45, Math.min(W, H * 1.4) / 640));
+  const now = t * 1000, g = geo(t), S = Math.max(.82, Math.min(1.45, Math.min(W, H * 1.4) / 640));
   ctx.clearRect(0, 0, W, H);
 
   for (const d of dust) {   // slow drifting dust
     d.y -= d.v * dt; if (d.y < 0) { d.y = 1; d.x = Math.random(); }
-    ctx.globalAlpha = d.a; dot(d.x * W, d.y * H, d.r, "#BFD0FF");
+    ctx.globalAlpha = d.a * (.55 + .45 * Math.sin(t * d.tw + d.ph));
+    dot(d.x * W + px * d.r * 7, d.y * H + py * d.r * 7, d.r, "#BFD0FF");
   }
   ctx.globalAlpha = 1;
 
+  px += (mx - px) * Math.min(1, dt * 3); py += (my - py) * Math.min(1, dt * 3);
+  hits = [];
   const busyAll = Object.values(lines).flat().filter(x => x.busy).length;
   const stat = ST.map(s => ({ busy: lines[s.id].filter(x => x.busy).length, wait: lines[s.id].filter(x => x.waiting).length }));
 
@@ -348,9 +381,13 @@ function draw(t, dt) {
       });
       if (!busy && tm[0]) state = `Next run ${(tm[0].next.split(" ")[2] || "").slice(0, 5)}`;
     }
+    const ro = (lines[s.id].length > 3 ? 48 : 40) * S;
+    if (lines[s.id].length) ring(p.x, p.y, ro, -t * .05, [2, 6], rgba(hex, .22));
     const ly = p.y + (Math.sin(p.a) < -.1 ? -66 : 68) * S;
+    ctx.globalAlpha = g.k; ctx.shadowColor = "rgba(7,11,26,.95)"; ctx.shadowBlur = 8;
     ctx.fillStyle = busy || wait ? C.ink : rgba(C.ink, .7); ctx.font = `600 ${Math.min(15, 13 * S)}px ${FONT}`; ctx.fillText(s.name, p.x, ly - 8);
     ctx.fillStyle = busy ? hex : C.mute; ctx.font = `500 ${Math.min(13, 11 * S)}px ${FONT}`; ctx.fillText(state, p.x, ly + 9);
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
   });
 
   // agents orbit their place; helpers orbit their agent
@@ -362,6 +399,11 @@ function draw(t, dt) {
     const ro = (a.n > 3 ? 48 : 40) * S, ang = phase[a.st] + a.idx * 2 * Math.PI / a.n;
     const x = p.x + ro * Math.cos(ang), y = p.y + ro * Math.sin(ang);
     a.x = x; a.y = y;
+    hits.push({ x, y, r: 16, key: a.key, color: hex, where: ST[i].name, title: a.title, doing: a.doing });
+    if (a.key === focusKey && now - focusAt < 3200) {
+      const fp = ((now - focusAt) / 800) % 1;
+      ctx.strokeStyle = rgba(hex, 1 - fp); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10 + fp * 30, 0, 7); ctx.stroke();
+    }
     if (a.fresh) { a.fresh = false; burst(x, y, hex, 16); }
     ctx.globalAlpha = fade;
     ctx.strokeStyle = rgba(hex, .3); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(x, y); ctx.stroke();
@@ -382,6 +424,7 @@ function draw(t, dt) {
       if (age < 1) { ctx.strokeStyle = rgba(hc, (1 - age) * .9); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(hx, hy); ctx.stroke(); }
       for (let k = 1; k <= 5; k++) { const ta = ha - k * .17; dot(x + hr * Math.cos(ta), y + hr * Math.sin(ta), 2.3 - k * .3, rgba(hc, (.4 - k * .07) * fade)); }
       halo(hc, hx, hy, 11, fade); ctx.globalAlpha = fade; dot(hx, hy, 2.6, hc);
+      hits.push({ x: hx, y: hy, r: 9, key: a.key, color: hc, where: ROLE[h.raw] || "Helper", title: h.task, doing: "Helping " + a.label });
     });
     ctx.globalAlpha = fade; ctx.fillStyle = C.ink; ctx.font = `500 ${Math.min(13, 11 * S)}px ${MONO}`;
     const out = Math.cos(ang) >= 0; ctx.textAlign = out ? "left" : "right";
@@ -404,6 +447,33 @@ function draw(t, dt) {
     ctx.beginPath(); ctx.arc(r.x, r.y, 6 + age * 70, 0, 7); ctx.stroke();
   }
 }
+
+const tip = $("tip");
+function pick(ev) {
+  const r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+  mx = (x / r.width - .5) * 2; my = (y / r.height - .5) * 2;
+  let best = null, bd = 1e9;
+  for (const h of hits) { const d = Math.hypot(h.x - x, h.y - y); if (d < h.r + 6 && d < bd) { best = h; bd = d; } }
+  document.querySelectorAll(".act.focus").forEach(e => e.classList.remove("focus"));
+  if (!best) { tip.classList.remove("show"); cv.style.cursor = ""; return; }
+  cv.style.cursor = "pointer";
+  tip.style.setProperty("--c", best.color);
+  tip.innerHTML = `<small>${esc(best.where)}</small><b>${esc(best.title)}</b><span>${esc(best.doing)}</span>`;
+  const tw = tip.offsetWidth || 240;
+  tip.style.left = Math.max(8, Math.min(r.width - tw - 8, best.x + 16)) + "px";
+  tip.style.top = Math.max(8, best.y - 20) + "px";
+  tip.classList.add("show");
+  document.querySelector(`.act[data-key="${CSS.escape(best.key)}"]`)?.classList.add("focus");
+}
+cv.addEventListener("pointermove", pick);
+cv.addEventListener("pointerdown", pick);
+cv.addEventListener("pointerleave", () => { tip.classList.remove("show"); mx = my = 0;
+  document.querySelectorAll(".act.focus").forEach(e => e.classList.remove("focus")); });
+$("now").addEventListener("click", ev => {
+  const card = ev.target.closest(".act"); if (!card) return;
+  focusKey = card.dataset.key; focusAt = performance.now();
+  if (innerWidth <= 1100) $("sky").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+});
 
 let last = 0;
 function frame(ms) { const t = ms / 1000, dt = Math.min(.05, last ? t - last : 0); last = t; draw(t, dt); requestAnimationFrame(frame); }
@@ -429,7 +499,7 @@ function renderNow(L) {
   const all = ST.flatMap(s => L[s.id].map(t => ({ ...t, st: s })));
   const el = $("now");
   const html = all.length ? all.map(t => `
-    <article class="act ${t.busy ? "busy" : ""} ${t.waiting ? "waiting" : ""} ${shown.has(t.key) ? "" : "new"}" style="--c:var(--${t.st.id})">
+    <article data-key="${esc(t.key)}" tabindex="0" class="act ${t.busy ? "busy" : ""} ${t.waiting ? "waiting" : ""} ${shown.has(t.key) ? "" : "new"}" style="--c:var(--${t.st.id})">
       <header><span class="dot"></span>${esc(t.st.name)}<span class="tag">${esc(t.label)}</span></header>
       <h3>${esc(t.title)}</h3>
       <p class="doing" data-type="${esc(t.key)}" data-text="${esc(t.doing)}" data-busy="${t.busy ? 1 : ""}"></p>
@@ -478,18 +548,31 @@ function render(d) {
   renderNow(lines);
   renderJobs(d.issues);
 
-  const feed = d.feed.map(f => `<li><time>${new Date(f.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</time><span>${esc(f.msg)}</span></li>`).join("");
+  const feed = d.feed.map(f => {
+    const k = kindOf(f.msg), at = new Date(f.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    return `<li><span class="ico ${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg></span><span>${esc(f.msg.replace(/^[\s\u25B6\u2705\u274C\u23F8\u26A0\uFE0F]+/u, ""))}</span><time title="${at}">${since(f.t)}</time></li>`;
+  }).join("");
   const fe = $("feed");
   if (fe.dataset.h !== feed) { fe.innerHTML = feed || '<li><span></span><span class="empty">No pushes today.</span></li>'; fe.dataset.h = feed; }
 
   const names = { "agent-hq-remote": "Live chat", "agent-hq-worker": "Job worker", tailscaled: "Tailscale", "hq-watch": "Watchdog" };
   $("signals").innerHTML = Object.entries(d.vm.core).map(([k, v]) =>
     `<div><i class="${v === "active" ? "on" : ""}" aria-hidden="true"></i>${esc(names[k] || k)}${v === "active" ? "" : ` <span style="color:var(--bad)">${esc(v)}</span>`}</div>`).join("");
-  const m = d.vm.mem, used = m.total ? Math.round(100 * (m.total - m.available) / m.total) : 0;
-  const arc = $("memArc"); arc.style.strokeDashoffset = 263.9 * (1 - used / 100); arc.classList.toggle("high", used > 85);
-  $("memPct").textContent = used + "%";
-  $("memnote").textContent = `${m.available} MB free of ${m.total} MB. Load ${d.vm.load.toFixed(2)}.`;
+  const m = d.vm.mem, sw = d.vm.swap || { total: 0, free: 0 };
+  const used = m.total ? Math.round(100 * (m.total - m.available) / m.total) : 0;
+  const swu = sw.total ? Math.round(100 * (sw.total - sw.free) / sw.total) : 0;
+  const ld = Math.min(100, Math.round(100 * d.vm.load / (d.vm.cpus || 2)));
+  bar("memBar", used, 85); $("memTxt").textContent = `${m.total - m.available} of ${m.total} MB`;
+  bar("swapBar", swu, 80); $("swapTxt").textContent = sw.total ? `${sw.total - sw.free} of ${sw.total} MB` : "off";
+  bar("loadBar", ld, 90); $("loadTxt").textContent = `${ld}%`;
 }
+
+const ICON = {
+  start: '<path d="M8 5.5l10 6.5-10 6.5z"/>', ok: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', bad: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  pause: '<path d="M9 5.5v13M15 5.5v13"/>', info: '<path d="M12 8v.01M12 11.5v5"/>' };
+const kindOf = m => /^\s*▶/.test(m) ? "start" : /^\s*✅/.test(m) ? "ok" : /^\s*(❌|⚠)/.test(m) ? "bad" : /^\s*⏸/.test(m) ? "pause" : "info";
+const since = t => { const s = Date.now() / 1000 - t; return s < 60 ? "now" : s < 3600 ? `${Math.round(s / 60)} min` : s < 86400 ? `${Math.round(s / 3600)} h` : `${Math.round(s / 86400)} d`; };
+function bar(id, pct, warn) { const e = $(id); e.style.width = pct + "%"; e.classList.toggle("high", pct > warn); }
 
 async function poll() {
   try {

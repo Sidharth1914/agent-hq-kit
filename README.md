@@ -52,7 +52,8 @@ Have both? Install on the server first, then on the PC. Both use the same job re
 6. **Windows:** registers a task that runs Windows jobs every 10 minutes. If the PC is your only machine, the installer also:
    - starts the live chat in a minimised window at every sign-in
    - sends every new job to this PC
-7. Sends a test alert to your phone.
+7. On a small server (under 3 GB RAM), adds compressed memory (zram) and a 4 GB swap file, so a 1 GB free-tier VM can run the agents.
+8. Sends a test alert to your phone.
 
 ### What needs you (sign-ins only)
 1. **GitHub:** the installer shows a code and a link. Open the link on any device, sign in, and enter the code.
