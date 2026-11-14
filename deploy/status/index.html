@@ -161,6 +161,61 @@ body {
 :focus-visible { outline: 2px solid var(--cloud); outline-offset: 3px; border-radius: 8px; }
 @media (max-width: 640px) { .legend { display: none; } }
 
+/* ---------- layout: the map leads, the right column fills ---------- */
+@media (min-width: 1101px) {
+  .grid { grid-template-areas: "sky sky sky sky now now" "sky sky sky sky srv srv" "jobs jobs jobs feed feed feed"; grid-template-rows: minmax(0, 1fr) auto auto; }
+  .sky { grid-area: sky; min-height: clamp(560px, 72vh, 780px); }
+  .now { grid-area: now; max-height: none; min-height: 0; contain: size; overflow: auto;
+    -webkit-mask-image: linear-gradient(#000 calc(100% - 32px), transparent); mask-image: linear-gradient(#000 calc(100% - 32px), transparent); }  /* the map sets the height; the list scrolls */ .server { grid-area: srv; }
+  .jobs { grid-area: jobs; } .feed { grid-area: feed; }
+}
+
+/* ---------- HUD ---------- */
+.stats { flex: 0 1 auto; gap: 0; padding: 4px; border: 1px solid var(--edge); border-radius: 18px; background: rgba(255,255,255,.03); }
+.stat { border: 0; background: none; border-radius: 14px; padding: 6px 16px; }
+.stat + .stat { box-shadow: inset 1px 0 0 var(--edge); border-radius: 0; }
+.stat b { display: inline-block; }
+.stat.bump b { animation: bump .65s cubic-bezier(.2, .9, .3, 1.4); }
+@keyframes bump { 40% { transform: translateY(-4px) scale(1.18); } }
+.live { margin-left: auto; }
+#uptime { margin-right: 8px; }
+@media (max-width: 1100px) {
+  .stats { padding: 0; border: 0; background: none; }
+  .stat { border: 1px solid var(--edge); background: rgba(255,255,255,.04); border-radius: 14px; }
+  .stat + .stat { box-shadow: none; border-radius: 14px; }
+}
+@media (max-width: 640px) { #uptime { display: none; } }
+
+/* ---------- toasts ---------- */
+.toasts { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 10; display: grid; gap: 8px; width: min(460px, calc(100% - 32px)); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: rgba(13, 19, 40, .94); border: 1px solid var(--edge);
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, .85); font-size: 14px; animation: drop .55s cubic-bezier(.2, .9, .3, 1.15); }
+.toast.out { opacity: 0; transform: translateY(-10px); transition: opacity .5s, transform .5s; }
+@keyframes drop { from { opacity: 0; transform: translateY(-18px) scale(.96); filter: blur(4px); } }
+
+/* ---------- right now: long commands, resting state, schedule ---------- */
+.doing { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rest { display: grid; justify-items: center; text-align: center; gap: 10px; padding: 20px 8px 8px; }
+.rest-art { width: 124px; height: 124px; }
+.rest-art .o1 { transform-origin: 60px 60px; animation: spin 14s linear infinite; }
+.rest-art .o2 { transform-origin: 60px 60px; animation: spin 26s linear infinite reverse; }
+.rest p { margin: 0; max-width: 30ch; color: var(--mute); }
+.rest b { display: block; color: var(--ink); font-weight: 600; font-size: 16px; margin-bottom: 2px; }
+.next { margin-top: 18px; }
+.next h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--mute); }
+.next ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.next li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 12px; border-radius: 10px; background: rgba(255,255,255,.03); font-size: 13px; }
+.next time { color: var(--trader); font-variant-numeric: tabular-nums; }
+
+/* ---------- jobs: two lines, live sweep on running jobs ---------- */
+.row { position: relative; overflow: hidden; }
+.row .what { white-space: normal; min-width: 0; }
+.row .what b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .what small { display: block; font-size: 12px; color: var(--mute); }
+.row.working::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 30%;
+  background: linear-gradient(90deg, transparent, var(--cloud), transparent); animation: sweep 1.9s ease-in-out infinite; }
+@keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -176,9 +231,11 @@ body {
     <div class="stat"><b id="sWait">0</b><span>waiting</span></div>
     <div class="stat"><b id="sDone">0</b><span>jobs done</span></div>
   </div>
-  <div class="live"><i id="signal" class="lost"></i><span id="clock"></span></div>
+  <div class="live"><span id="uptime"></span><i id="signal" class="lost"></i><span id="clock"></span></div>
 </header>
 <div class="lost-msg" id="lost">The server isn't answering. Check that Tailscale is on. This page reconnects by itself.</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
 
 <main class="grid">
   <section class="tile sky" aria-label="Live map of the agents">
@@ -267,6 +324,8 @@ const dust = Array.from({ length: innerWidth < 640 ? 30 : 70 }, () => ({
   tw: .6 + Math.random() * 1.8, ph: Math.random() * 7 }));
 const T0 = performance.now();          // the opening: the places fly out from the core once
 let hits = [], focusKey = null, focusAt = 0, px = 0, py = 0, mx = 0, my = 0;
+const comets = [], curves = {};   // a job arriving flies from the core to its place
+let shoot = null, nextShoot = performance.now() + 5000, lastPush = 0;
 
 const sprites = {};
 function glow(hex) {
@@ -311,7 +370,8 @@ function sync(L) {
   for (const s of ST) L[s.id].forEach((t, k) => {
     seen.add(t.key);
     let a = agents.get(t.key);
-    if (!a) { a = { key: t.key, st: s.id, born: now, hphase: Math.random() * 6, helpers: [], x: null, fresh: true }; agents.set(t.key, a); }
+    if (!a) { if (!reduced) comets.push({ st: s.id, born: now });
+      a = { key: t.key, st: s.id, born: now + (reduced ? 0 : 1000), hphase: Math.random() * 6, helpers: [], x: null, fresh: true }; agents.set(t.key, a); }
     const old = a.helpers;
     Object.assign(a, { label: t.label, busy: !!t.busy, waiting: !!t.waiting, idx: k, n: L[s.id].length, dying: 0 });
     a.title = t.title; a.doing = t.doing;
@@ -332,6 +392,25 @@ function draw(t, dt) {
   }
   ctx.globalAlpha = 1;
 
+  ["worker", "laptop", "chat"].forEach((c, i) => {   // slow nebula clouds
+    const a = t * .018 + i * 2.1;
+    halo(C[c], W / 2 + Math.cos(a) * W * .28 - px * 14, H / 2 + Math.sin(a * 1.3) * H * .22 - py * 14, Math.max(W, H) * .42, .07);
+  });
+  if (!reduced && now > nextShoot) {   // a shooting star now and then
+    const left = Math.random() < .5;
+    shoot = { x: left ? -40 : W + 40, y: Math.random() * H * .4, vx: (left ? 1 : -1) * (520 + Math.random() * 300), vy: 160 + Math.random() * 120, born: now };
+    nextShoot = now + 9000 + Math.random() * 10000;
+  }
+  if (shoot) {
+    const age = (now - shoot.born) / 1000;
+    if (age > 1.4) shoot = null;
+    else {
+      const x = shoot.x + shoot.vx * age, y = shoot.y + shoot.vy * age, l = 95 / Math.hypot(shoot.vx, shoot.vy);
+      const gr = ctx.createLinearGradient(x, y, x - shoot.vx * l, y - shoot.vy * l);
+      gr.addColorStop(0, `rgba(230,240,255,${.9 * (1 - age / 1.4)})`); gr.addColorStop(1, "rgba(230,240,255,0)");
+      ctx.strokeStyle = gr; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - shoot.vx * l, y - shoot.vy * l); ctx.stroke();
+    }
+  }
   px += (mx - px) * Math.min(1, dt * 3); py += (my - py) * Math.min(1, dt * 3);
   hits = [];
   const busyAll = Object.values(lines).flat().filter(x => x.busy).length;
@@ -341,6 +420,7 @@ function draw(t, dt) {
   ST.forEach((s, i) => {
     const p = g.st[i], hex = C[s.id], { busy, wait } = stat[i];
     const dx = p.x - g.cx, dy = p.y - g.cy, qx = (g.cx + p.x) / 2 - dy * .2, qy = (g.cy + p.y) / 2 + dx * .2;
+    curves[s.id] = { qx, qy, x: p.x, y: p.y };
     ctx.strokeStyle = rgba(hex, busy ? .6 : wait ? .3 : .13); ctx.lineWidth = busy ? 2 : 1.2;
     ctx.setLineDash(busy ? [7, 9] : [2, 7]); ctx.lineDashOffset = busy ? -t * 42 : 0;
     ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.quadraticCurveTo(qx, qy, p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
@@ -394,8 +474,9 @@ function draw(t, dt) {
   for (const a of agents.values()) {
     const i = ST.findIndex(s => s.id === a.st), p = g.st[i], hex = C[a.st];
     if (i < 0) { agents.delete(a.key); continue; }
-    const fade = a.dying ? Math.max(0, 1 - (now - a.dying) / 900) : Math.min(1, (now - a.born) / 600);
+    const fade = a.dying ? Math.max(0, 1 - (now - a.dying) / 900) : Math.max(0, Math.min(1, (now - a.born) / 600));
     if (a.dying && fade <= 0) { agents.delete(a.key); continue; }
+    if (!a.dying && now < a.born) continue;   // still on its way from the core
     const ro = (a.n > 3 ? 48 : 40) * S, ang = phase[a.st] + a.idx * 2 * Math.PI / a.n;
     const x = p.x + ro * Math.cos(ang), y = p.y + ro * Math.sin(ang);
     a.x = x; a.y = y;
@@ -432,6 +513,15 @@ function draw(t, dt) {
     ctx.globalAlpha = 1;
   }
 
+  for (let k = comets.length - 1; k >= 0; k--) {   // arriving jobs
+    const c = comets[k], u = (now - c.born) / 1000, cu = curves[c.st];
+    if (!cu) { comets.splice(k, 1); continue; }
+    if (u >= 1) { comets.splice(k, 1); burst(cu.x, cu.y, C[c.st], 10); continue; }
+    for (let j = 0; j < 14; j++) {
+      const w = Math.max(0, u - j * .02), v = 1 - w;
+      halo(C[c.st], v * v * g.cx + 2 * v * w * cu.qx + w * w * cu.x, v * v * g.cy + 2 * v * w * cu.qy + w * w * cu.y, j ? 9 - j * .5 : 18, (1 - j / 14) * .95);
+    }
+  }
   // sparks and shock rings from arrivals and finishes
   for (let k = parts.length - 1; k >= 0; k--) {
     const q = parts[k]; q.life -= dt * 1.3;
@@ -486,6 +576,7 @@ function nowText(s) {
   return m ? `<span class="verb">${esc(m[1])}</span>${esc(m[2])}` : esc(s);
 }
 function typeInto(el) {
+  el.title = el.dataset.text;
   const k = el.dataset.type, text = el.dataset.text, caret = el.dataset.busy ? '<span class="caret"></span>' : "";
   if (reduced || typed[k] === text) { el.innerHTML = nowText(text) + caret; typed[k] = text; return; }
   typed[k] = text;
@@ -498,14 +589,19 @@ let shown = new Set();
 function renderNow(L) {
   const all = ST.flatMap(s => L[s.id].map(t => ({ ...t, st: s })));
   const el = $("now");
-  const html = all.length ? all.map(t => `
+  let html = all.length ? all.map(t => `
     <article data-key="${esc(t.key)}" tabindex="0" class="act ${t.busy ? "busy" : ""} ${t.waiting ? "waiting" : ""} ${shown.has(t.key) ? "" : "new"}" style="--c:var(--${t.st.id})">
       <header><span class="dot"></span>${esc(t.st.name)}<span class="tag">${esc(t.label)}</span></header>
       <h3>${esc(t.title)}</h3>
       <p class="doing" data-type="${esc(t.key)}" data-text="${esc(t.doing)}" data-busy="${t.busy ? 1 : ""}"></p>
       ${t.helpers.length ? `<ul class="helpers">${t.helpers.map(h => `<li style="--r:var(--${roleKey(h.role)})"><span><b>${esc(ROLE[h.role] || h.role)}</b>${esc(h.task)}</span></li>`).join("")}</ul>` : ""}
       <p class="meta">${esc(t.meta)}</p>
-    </article>`).join("") : '<p class="empty">Nobody is working right now. Send a job from the Claude app and it lights up here.</p>';
+    </article>`).join("") : `<div class="rest"><svg class="rest-art" viewBox="0 0 120 120" aria-hidden="true">
+      <circle cx="60" cy="60" r="9" fill="#E8EDFF"/>
+      <g class="o1"><circle cx="60" cy="60" r="30" fill="none" stroke="rgba(150,175,255,.28)" stroke-dasharray="3 6"/><circle cx="90" cy="60" r="4" fill="${C.chat}"/></g>
+      <g class="o2"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(150,175,255,.16)" stroke-dasharray="2 8"/><circle cx="60" cy="10" r="3" fill="${C.cloud}"/><circle cx="25" cy="95" r="2.5" fill="${C.laptop}"/></g>
+    </svg><p><b>Everyone is resting.</b>Send a job from the Claude app and it lights up here.</p></div>`;
+  html += upNext();
   shown = new Set(all.map(t => t.key));
   const key = html.replace(/ new"/g, '"');
   if (el.dataset.h === key) return;
@@ -522,7 +618,10 @@ function renderJobs(issues) {
       : i.labels.some(l => l.startsWith("needs-")) ? "waiting" : "new";
     const flip = lastSt[i.n] && lastSt[i.n] !== st; lastSt[i.n] = st;
     const word = { working: "Working", waiting: "Waiting", done: "Done", failed: "Failed", new: "New" }[st];
-    return `<div class="row ${flip ? "flip" : ""}"><span class="num">#${i.n}</span><span class="what" title="${esc(i.title)}">${esc(i.title)}</span><span class="st ${st}">${word}</span></div>`;
+    if (flip && st === "working") toast("start", `#${i.n} started: ${i.title}`);
+    if (flip && st === "done") toast("ok", `#${i.n} done: ${i.title}`);
+    if (flip && st === "failed") toast("bad", `#${i.n} failed: ${i.title}`);
+    return `<div class="row ${st} ${flip ? "flip" : ""}"><span class="num">#${i.n}</span><span class="what" title="${esc(i.title)}"><b>${esc(i.title)}</b><small>${updated(i.updated)}</small></span><span class="st ${st}">${word}</span></div>`;
   }).join("");
   const el = $("jobs");
   if (el.dataset.h !== rows) { el.innerHTML = rows || '<p class="empty">No jobs yet.</p>'; el.dataset.h = rows; }
@@ -530,6 +629,7 @@ function renderJobs(issues) {
 
 function count(el, to) {
   const from = +(el.dataset.v || 0); if (from === to) return; el.dataset.v = to;
+  const box = el.parentElement; box.classList.remove("bump"); void box.offsetWidth; box.classList.add("bump");
   if (reduced) { el.textContent = to; return; }
   const t0 = performance.now();
   const step = n => { const p = Math.min(1, (n - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
@@ -542,6 +642,8 @@ function render(d) {
   count($("sWork"), busy); count($("sHelp"), helpers); count($("sWait"), queued);
   count($("sDone"), d.issues.filter(i => i.state !== "OPEN" && !i.labels.includes("failed")).length);
   $("statWork").classList.toggle("hot", busy > 0);
+  const up = d.vm.uptime || 0;
+  $("uptime").textContent = up ? `Server up ${up < 3600 ? Math.round(up / 60) + " min" : up < 86400 ? Math.round(up / 3600) + " h" : Math.round(up / 86400) + " days"}` : "";
   $("headline").innerHTML = busy
     ? `<b>${plural(busy, "agent")}</b> at work${helpers ? ` with <b>${plural(helpers, "helper")}</b>` : ""}${queued ? `, ${queued} waiting` : ""}.`
     : queued ? `Nobody working. <b>${plural(queued, "job")}</b> waiting.` : "All quiet. The server is standing by.";
@@ -552,6 +654,12 @@ function render(d) {
     const k = kindOf(f.msg), at = new Date(f.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
     return `<li><span class="ico ${k}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg></span><span>${esc(f.msg.replace(/^[\s\u25B6\u2705\u274C\u23F8\u26A0\uFE0F]+/u, ""))}</span><time title="${at}">${since(f.t)}</time></li>`;
   }).join("");
+  const newest = d.feed[0] ? d.feed[0].t : 0;   // a new push sends a ripple out of the core
+  if (lastPush && newest > lastPush) {
+    const k = kindOf(d.feed[0].msg);
+    rings.push({ x: W / 2, y: H / 2 - 10, hex: k === "bad" ? "#F87171" : k === "ok" ? "#4ADE80" : "#7FA8FF", born: performance.now() });
+  }
+  lastPush = newest || lastPush;
   const fe = $("feed");
   if (fe.dataset.h !== feed) { fe.innerHTML = feed || '<li><span></span><span class="empty">No pushes today.</span></li>'; fe.dataset.h = feed; }
 
@@ -573,6 +681,27 @@ const ICON = {
 const kindOf = m => /^\s*▶/.test(m) ? "start" : /^\s*✅/.test(m) ? "ok" : /^\s*(❌|⚠)/.test(m) ? "bad" : /^\s*⏸/.test(m) ? "pause" : "info";
 const since = t => { const s = Date.now() / 1000 - t; return s < 60 ? "now" : s < 3600 ? `${Math.round(s / 60)} min` : s < 86400 ? `${Math.round(s / 3600)} h` : `${Math.round(s / 86400)} d`; };
 function bar(id, pct, warn) { const e = $(id); e.style.width = pct + "%"; e.classList.toggle("high", pct > warn); }
+
+function toast(kind, text) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span class="ico ${kind}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[kind]}</svg></span><span>${esc(text)}</span>`;
+  $("toasts").appendChild(el);
+  setTimeout(() => el.classList.add("out"), 5000);
+  setTimeout(() => el.remove(), 5600);
+}
+function updated(iso) {
+  const t = Date.parse(iso || "") / 1000;
+  if (!t) return "";
+  const s = since(t);
+  return s === "now" ? "Updated just now" : `Updated ${s} ago`;
+}
+function upNext() {
+  const tm = (data && data.vm.trader) || [];
+  if (!tm.length) return "";
+  return `<div class="next"><h3>Scheduled next</h3><ul>${tm.slice(0, 4).map(x =>
+    `<li><span>${esc(x.name)}</span><time>${esc((x.next.split(" ")[2] || "").slice(0, 5))}</time></li>`).join("")}</ul></div>`;
+}
 
 async function poll() {
   try {

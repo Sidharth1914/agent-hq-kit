@@ -167,6 +167,7 @@ def services():
     return {"core": out, "trader": trader, "trader_running": running,
             "mem": {"total": mem.get("MemTotal", 0), "available": mem.get("MemAvailable", 0)},
             "swap": {"total": mem.get("SwapTotal", 0), "free": mem.get("SwapFree", 0)}, "cpus": os.cpu_count() or 1,
+            "uptime": float(Path("/proc/uptime").read_text().split()[0]) if Path("/proc/uptime").exists() else 0,
             "load": os.getloadavg()[0] if hasattr(os, "getloadavg") else 0}
 
 
