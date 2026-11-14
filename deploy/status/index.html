@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070B1A">
+<title>Agent HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800&family=Red+Hat+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070B1A; --panel: rgba(13, 19, 40, .82); --edge: rgba(150, 175, 255, .12); --grid: rgba(140, 170, 255, .045);
+  --ink: #E8EDFF; --mute: #8D97B8;
+  --chat: #FF5C8A; --worker: #4D8DFF; --cloud: #22D3EE; --laptop: #A78BFA; --trader: #FBBF24;
+  --developer: #5EEAD4; --researcher: #C4F25A; --designer: #F472B6; --writer: #FCD34D; --reviewer: #FB923C; --general: #CBD5E1;
+  --ok: #4ADE80; --bad: #F87171; --wait: #FBBF24;
+  --sans: "Red Hat Display", system-ui, "Segoe UI", sans-serif;
+  --mono: "Red Hat Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh; color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 700px at 28% 18%, rgba(77, 141, 255, .13), transparent 60%),
+    radial-gradient(900px 600px at 88% 85%, rgba(167, 139, 250, .10), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+  background-attachment: fixed;
+}
+
+/* ---------- HUD ---------- */
+.hud { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 28px; max-width: 1480px; margin: 0 auto; padding: 20px 24px 16px; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 26px; letter-spacing: -.4px; }
+.brand svg { width: 34px; height: 34px; }
+.brand svg .spin { transform-origin: 17px 17px; animation: spin 9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+.stat { display: flex; align-items: baseline; gap: 8px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
+.stat b { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--mute); font-size: 13px; }
+.stat.hot b { color: var(--chat); }
+.live { display: flex; align-items: center; gap: 9px; color: var(--mute); font-variant-numeric: tabular-nums; }
+.live i { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(74, 222, 128, .6); animation: beat 2s infinite; }
+.live i.lost { background: var(--bad); animation: none; }
+@keyframes beat { 70% { box-shadow: 0 0 0 9px rgba(74, 222, 128, 0); } 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
+.lost-msg { display: none; max-width: 1432px; margin: 0 auto 14px; padding: 10px 16px; border-radius: 14px; background: rgba(248, 113, 113, .12); border: 1px solid rgba(248, 113, 113, .35); color: #FFC9C9; font-size: 14px; }
+.lost-msg.show { display: block; }
+
+/* ---------- grid ---------- */
+.grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; max-width: 1480px; margin: 0 auto; padding: 0 24px 28px; }
+.tile { background: var(--panel); border: 1px solid var(--edge); border-radius: 22px; padding: 18px; min-width: 0; }
+.tile h2 { margin: 0 0 12px; font-size: 16px; font-weight: 700; letter-spacing: -.1px; }
+.sky { grid-column: span 4; grid-row: span 2; position: relative; padding: 0; overflow: hidden; min-height: clamp(440px, 66vh, 700px);
+  background: radial-gradient(circle at 50% 50%, rgba(77, 141, 255, .10), transparent 55%), rgba(8, 12, 30, .7); }
+.sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.headline { position: absolute; left: 20px; right: 20px; bottom: 16px; margin: 0; font-size: 15px; color: var(--mute); pointer-events: none; }
+.headline b { color: var(--ink); font-weight: 700; }
+.now { grid-column: span 2; grid-row: span 2; max-height: clamp(440px, 66vh, 700px); overflow: auto; }
+.jobs, .feed, .server { grid-column: span 2; }
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: minmax(0, 1fr); padding: 0 16px 24px; gap: 14px; }
+  .sky, .now, .jobs, .feed, .server { grid-column: auto; grid-row: auto; }
+  .sky { min-height: 440px; }
+  .now { max-height: none; }
+  .hud { padding: 16px 16px 12px; }
+  .stats { order: 3; flex-basis: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .stat { flex-direction: column; align-items: center; gap: 0; padding: 8px 6px; border-radius: 14px; text-align: center; }
+  .stat span { font-size: 11px; line-height: 1.2; }
+  .live { margin-left: auto; }
+}
+
+/* ---------- right now ---------- */
+.acts { display: grid; gap: 12px; }
+.act { position: relative; padding: 14px 16px 12px; border-radius: 16px; background: rgba(255,255,255,.035); border: 1px solid var(--edge); overflow: hidden; }
+.act.busy { border-color: color-mix(in srgb, var(--c) 35%, transparent); }
+.act.busy::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--c), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: scan 2.2s linear infinite; }
+@keyframes scan { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+.act.new { animation: arrive .7s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes arrive { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.act header { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mute); }
+.act .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.act.waiting .dot { background: transparent; box-shadow: inset 0 0 0 2px var(--wait); }
+.act .tag { margin-left: auto; font-family: var(--mono); color: var(--c); }
+.act h3 { margin: 6px 0 4px; font-size: 16px; font-weight: 600; line-height: 1.3; }
+.doing { margin: 0; font-family: var(--mono); font-size: 13px; color: #C9D3F5; min-height: 1.5em; overflow-wrap: anywhere; }
+.doing .verb { color: var(--c); font-weight: 500; }
+.caret { display: inline-block; width: 7px; height: 1.05em; background: var(--c); vertical-align: -2px; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.helpers { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 5px; }
+.helpers li { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 13px; color: #C9D3F5; }
+.helpers li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--r); box-shadow: 0 0 8px var(--r); align-self: center; }
+.act.busy .helpers li::before { animation: orbit 1.6s ease-in-out infinite; }
+.helpers li:nth-child(2)::before { animation-delay: .25s; } .helpers li:nth-child(3)::before { animation-delay: .5s; }
+@keyframes orbit { 50% { transform: scale(.55); opacity: .5; } }
+.helpers b { color: var(--r); font-weight: 600; margin-right: 6px; }
+.meta { margin: 8px 0 0; font-size: 12px; color: var(--mute); }
+.empty { color: var(--mute); margin: 4px 0 0; }
+
+/* ---------- jobs ---------- */
+.rows { display: grid; gap: 4px; perspective: 500px; }
+.row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 10px; background: rgba(255,255,255,.03); font-size: 14px; }
+.row .num { color: var(--mute); font-family: var(--mono); font-size: 12px; }
+.row .what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.st.working { color: #0B1230; background: var(--cloud); animation: glowpill 1.8s ease-in-out infinite; }
+@keyframes glowpill { 50% { box-shadow: 0 0 12px var(--cloud); } }
+.st.waiting { color: var(--wait); background: rgba(251, 191, 36, .12); }
+.st.done { color: var(--ok); background: rgba(74, 222, 128, .10); }
+.st.failed { color: var(--bad); background: rgba(248, 113, 113, .12); }
+.st.new { color: var(--ink); background: rgba(255,255,255,.08); }
+.row.flip .st { animation: flip .7s ease-in-out; }
+@keyframes flip { 50% { transform: rotateX(90deg); } }
+
+/* ---------- feed ---------- */
+.pushes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 300px; overflow: auto; }
+.pushes li { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: 8px; font-size: 14px; }
+.pushes time { color: var(--mute); font-family: var(--mono); font-size: 12px; padding-top: 2px; }
+
+/* ---------- server ---------- */
+.srv { display: flex; align-items: center; gap: 18px; }
+.gauge { position: relative; width: 108px; height: 108px; flex: none; }
+.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge circle { fill: none; stroke-width: 9; }
+.gauge .track { stroke: rgba(255,255,255,.07); }
+.gauge .arc { stroke: var(--worker); stroke-linecap: round; stroke-dasharray: 263.9; stroke-dashoffset: 263.9; transition: stroke-dashoffset 1.4s cubic-bezier(.2, .8, .2, 1), stroke .4s; filter: drop-shadow(0 0 6px rgba(77, 141, 255, .6)); }
+.gauge .arc.high { stroke: var(--chat); }
+.gauge-text { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.gauge-text b { font-size: 22px; font-weight: 700; line-height: 1; }
+.gauge-text span { font-size: 11px; color: var(--mute); }
+.signals { display: grid; gap: 6px; font-size: 13px; min-width: 0; }
+.signals div { display: flex; align-items: center; gap: 8px; }
+.signals i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); box-shadow: 0 0 8px var(--bad); flex: none; }
+.signals i.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.note { margin: 12px 0 0; color: var(--mute); font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="hud">
+  <div class="brand"><svg viewBox="0 0 34 34" aria-hidden="true">
+    <circle cx="17" cy="17" r="6" fill="#E8EDFF"/>
+    <g class="spin"><circle cx="17" cy="17" r="13" fill="none" stroke="#4D8DFF" stroke-width="2" stroke-dasharray="4 5"/>
+    <circle cx="30" cy="17" r="3" fill="#FF5C8A"/><circle cx="6" cy="10" r="2.4" fill="#22D3EE"/></g></svg>Agent HQ</div>
+  <div class="stats">
+    <div class="stat" id="statWork"><b id="sWork">0</b><span>agents working</span></div>
+    <div class="stat"><b id="sHelp">0</b><span>helpers</span></div>
+    <div class="stat"><b id="sWait">0</b><span>waiting</span></div>
+    <div class="stat"><b id="sDone">0</b><span>jobs done</span></div>
+  </div>
+  <div class="live"><i id="signal" class="lost"></i><span id="clock"></span></div>
+</header>
+<div class="lost-msg" id="lost">The server isn't answering. Check that Tailscale is on. This page reconnects by itself.</div>
+
+<main class="grid">
+  <section class="tile sky" aria-label="Live map of the agents">
+    <canvas id="sky" role="img" aria-label="Agents orbiting the places they run: live chat, server jobs and the Windows PC"></canvas>
+    <p class="headline" id="headline" aria-live="polite">Connecting to the server</p>
+  </section>
+  <section class="tile now"><h2>Right now</h2><div class="acts" id="now"></div></section>
+  <section class="tile jobs"><h2>Jobs</h2><div class="rows" id="jobs"></div></section>
+  <section class="tile feed"><h2>Phone pushes</h2><ul class="pushes" id="feed"></ul></section>
+  <section class="tile server"><h2>Server</h2>
+    <div class="srv">
+      <div class="gauge"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="arc" id="memArc" cx="50" cy="50" r="42"/></svg>
+        <div class="gauge-text"><b id="memPct">0%</b><span>memory</span></div></div>
+      <div class="signals" id="signals"></div>
+    </div>
+    <p class="note" id="memnote"></p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ST_ALL = [
+  { id: "chat", letter: "C", name: "Live chat" },
+  { id: "worker", letter: "S", name: "Server jobs" },
+  { id: "cloud", letter: "A", name: "Cloud" },
+  { id: "laptop", letter: "W", name: "Windows PC" },
+  { id: "trader", letter: "T", name: "Trader" },
+];
+const shows = (s, d) => s.id !== "cloud" && (s.id !== "trader" || (d && (d.vm.trader || []).length));  // Trader only with trader-* timers
+let ST = ST_ALL.filter(s => shows(s));
+const ROLE = { developer: "Developer", researcher: "Researcher", designer: "Designer", writer: "Writer",
+  reviewer: "Reviewer", "general-purpose": "Helper", general: "Helper", Explore: "Explorer", Plan: "Planner" };
+const roleKey = r => ["developer", "researcher", "designer", "writer", "reviewer"].includes(r) ? r : "general";
+const css = getComputedStyle(document.documentElement);
+const C = {};
+for (const k of ["chat", "worker", "cloud", "laptop", "trader", "developer", "researcher", "designer", "writer", "reviewer", "general", "wait", "ink", "mute"])
+  C[k] = css.getPropertyValue("--" + k).trim();
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ago = s => s < 60 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const FONT = "Red Hat Display, system-ui, sans-serif", MONO = "Red Hat Mono, Consolas, monospace";
+
+/* ---------- data: who is working where ---------- */
+const emptyLines = () => ({ chat: [], worker: [], cloud: [], laptop: [], trader: [] });
+function collect(d) {
+  const lines = emptyLines(), onVm = new Set();
+  for (const s of d.sessions) {
+    if (s.kind === "worker" && s.issue) {
+      const iss = d.issues.find(i => i.n === s.issue);
+      if (iss && !iss.labels.includes("working")) continue;  // that run ended
+      onVm.add(s.issue);
+    }
+    const line = s.kind === "worker" ? "worker" : s.kind === "trader" ? "trader" : "chat";
+    lines[line].push({
+      key: s.id, label: s.kind === "chat" ? "Chat" : s.kind === "trader" ? "Review" : `#${s.issue || "?"}`,
+      title: s.task || "Starting up", doing: s.doing || "Thinking", busy: s.busy,
+      helpers: s.subagents || [], meta: `${plural(s.tools, "step")} so far, last move ${ago(s.idle_s)}`,
+    });
+  }
+  for (const i of d.issues) {
+    if (i.state !== "OPEN") continue;
+    const L = i.labels;
+    if (L.includes("working") && !onVm.has(i.n))  // working, but not by the server worker: the Windows PC
+      lines.laptop.push({ key: "c" + i.n, label: `#${i.n}`, title: i.title, doing: "Working on the Windows PC", busy: true, helpers: [], meta: "Follow it on the GitHub issue" });
+    else if (L.includes("needs-windows"))
+      lines.laptop.push({ key: "l" + i.n, label: `#${i.n}`, title: i.title, doing: "Queued until the Windows PC is on", waiting: true, helpers: [], meta: "Starts within 10 minutes of the PC waking" });
+    else if (L.includes("needs-local") && !onVm.has(i.n))
+      lines.worker.push({ key: "q" + i.n, label: `#${i.n}`, title: i.title, doing: "Queued, starts within 5 minutes", waiting: true, helpers: [], meta: "Next in line on the server" });
+  }
+  for (const r of d.vm.trader_running || [])
+    lines.trader.push({ key: "t" + r, label: r, title: `Scheduled job: ${r}`, doing: `Running the ${r} step`, busy: true, helpers: [], meta: "Paper trading on the server" });
+  return lines;
+}
+
+/* ---------- the sky: canvas scene ---------- */
+const cv = $("sky"), ctx = cv.getContext("2d");
+let W = 0, H = 0, data = null, lines = emptyLines();
+const agents = new Map(), parts = [], rings = [], phase = {};
+ST_ALL.forEach(s => phase[s.id] = Math.random() * 6);
+const dust = Array.from({ length: innerWidth < 640 ? 30 : 70 }, () => ({
+  x: Math.random(), y: Math.random(), v: .004 + Math.random() * .012, r: .3 + Math.random() * 1.2, a: .1 + Math.random() * .45 }));
+
+const sprites = {};
+function glow(hex) {
+  if (sprites[hex]) return sprites[hex];
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, rgba(hex, .95)); gr.addColorStop(.22, rgba(hex, .4)); gr.addColorStop(1, rgba(hex, 0));
+  g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+  return sprites[hex] = c;
+}
+function halo(hex, x, y, r, a = 1) { ctx.globalAlpha = a; ctx.drawImage(glow(hex), x - r, y - r, r * 2, r * 2); ctx.globalAlpha = 1; }
+function dot(x, y, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
+function ring(x, y, r, rot, dash, stroke, w = 1.2) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.setLineDash(dash); ctx.strokeStyle = stroke; ctx.lineWidth = w;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); ctx.restore();
+}
+function burst(x, y, hex, n) {
+  if (reduced) return;
+  for (let i = 0; i < n; i++) { const a = Math.random() * 7, v = 40 + Math.random() * 110; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, hex }); }
+}
+function nova(x, y, hex) {
+  if (reduced) return;
+  const now = performance.now(); rings.push({ x, y, hex, born: now }, { x, y, hex: "#FFFFFF", born: now + 160 }); burst(x, y, hex, 22);
+}
+
+function resize() {
+  const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (reduced) draw(performance.now() / 1000, 0);
+}
+new ResizeObserver(resize).observe(cv);
+
+function geo() {
+  const cx = W / 2, cy = H / 2 - 10, ry = H * .3, rx = Math.min(W * .36, ry * 1.75);
+  return { cx, cy, st: ST.map((s, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / ST.length; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a }; }) };
+}
+
+function sync(L) {
+  const now = performance.now(), seen = new Set();
+  for (const s of ST) L[s.id].forEach((t, k) => {
+    seen.add(t.key);
+    let a = agents.get(t.key);
+    if (!a) { a = { key: t.key, st: s.id, born: now, hphase: Math.random() * 6, helpers: [], x: null, fresh: true }; agents.set(t.key, a); }
+    const old = a.helpers;
+    Object.assign(a, { label: t.label, busy: !!t.busy, waiting: !!t.waiting, idx: k, n: L[s.id].length, dying: 0 });
+    a.helpers = t.helpers.map((h, j) => ({ role: roleKey(h.role), born: old[j] && old[j].role === roleKey(h.role) ? old[j].born : now }));
+  });
+  for (const a of agents.values()) if (!seen.has(a.key) && !a.dying) { a.dying = now; if (a.x != null) nova(a.x, a.y, C[a.st]); }
+}
+
+function draw(t, dt) {
+  if (!W) return;
+  const now = t * 1000, g = geo(), S = Math.max(.82, Math.min(1.45, Math.min(W, H * 1.4) / 640));
+  ctx.clearRect(0, 0, W, H);
+
+  for (const d of dust) {   // slow drifting dust
+    d.y -= d.v * dt; if (d.y < 0) { d.y = 1; d.x = Math.random(); }
+    ctx.globalAlpha = d.a; dot(d.x * W, d.y * H, d.r, "#BFD0FF");
+  }
+  ctx.globalAlpha = 1;
+
+  const busyAll = Object.values(lines).flat().filter(x => x.busy).length;
+  const stat = ST.map(s => ({ busy: lines[s.id].filter(x => x.busy).length, wait: lines[s.id].filter(x => x.waiting).length }));
+
+  // links from the server core to each place, with work flowing along them
+  ST.forEach((s, i) => {
+    const p = g.st[i], hex = C[s.id], { busy, wait } = stat[i];
+    const dx = p.x - g.cx, dy = p.y - g.cy, qx = (g.cx + p.x) / 2 - dy * .2, qy = (g.cy + p.y) / 2 + dx * .2;
+    ctx.strokeStyle = rgba(hex, busy ? .6 : wait ? .3 : .13); ctx.lineWidth = busy ? 2 : 1.2;
+    ctx.setLineDash(busy ? [7, 9] : [2, 7]); ctx.lineDashOffset = busy ? -t * 42 : 0;
+    ctx.beginPath(); ctx.moveTo(g.cx, g.cy); ctx.quadraticCurveTo(qx, qy, p.x, p.y); ctx.stroke(); ctx.setLineDash([]);
+    if (busy) {
+      const k = Math.min(9, 3 + busy * 3);
+      for (let j = 0; j < k; j++) {
+        const u = (t * .32 + j / k) % 1, v = 1 - u;
+        const x = v * v * g.cx + 2 * v * u * qx + u * u * p.x, y = v * v * g.cy + 2 * v * u * qy + u * u * p.y;
+        halo(hex, x, y, 10, .9); dot(x, y, 1.5, "#FFFFFF");
+      }
+    }
+    phase[s.id] += dt * (busy ? .55 : .07);
+  });
+
+  // the core: the server everything runs through
+  const pr = 1 + Math.sin(t * (busyAll ? 3.2 : 1.1)) * (busyAll ? .09 : .04);
+  halo(busyAll ? "#7FA8FF" : "#5B6B9A", g.cx, g.cy, 78 * S * pr, busyAll ? .95 : .6);
+  dot(g.cx, g.cy, 21 * S, "#0B1230");
+  ctx.strokeStyle = "rgba(220,230,255,.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.cx, g.cy, 21 * S, 0, 7); ctx.stroke();
+  ring(g.cx, g.cy, 33 * S, t * .3, [3, 7], "rgba(160,190,255,.5)");
+  ring(g.cx, g.cy, 45 * S, -t * .17, [16, 10], "rgba(160,190,255,.22)", 2);
+  ctx.fillStyle = C.ink; ctx.font = `700 ${12 * S}px ${FONT}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("HQ", g.cx, g.cy + 1);
+
+  // the five places
+  ST.forEach((s, i) => {
+    const p = g.st[i], hex = C[s.id], { busy, wait } = stat[i];
+    if (busy) halo(hex, p.x, p.y, (54 + Math.sin(t * 2 + i) * 5) * S, .5);
+    dot(p.x, p.y, 17 * S, "#0B1230");
+    ctx.strokeStyle = rgba(hex, busy || wait ? 1 : .45); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 17 * S, 0, 7); ctx.stroke();
+    ctx.fillStyle = rgba(hex, busy || wait ? 1 : .7); ctx.font = `800 ${13 * S}px ${FONT}`; ctx.fillText(s.letter, p.x, p.y + 1);
+    let state = busy ? `${busy} working` : wait ? `${wait} waiting` : "Quiet";
+    if (s.id === "trader" && data) {
+      const tm = data.vm.trader || [], run = data.vm.trader_running || [];
+      tm.forEach((x, j) => {
+        const a = -Math.PI / 2 + j * 2 * Math.PI / Math.max(tm.length, 1), lit = run.includes(x.name);
+        dot(p.x + 24 * S * Math.cos(a), p.y + 24 * S * Math.sin(a), lit ? 3.2 : 1.8, lit ? hex : rgba(hex, .4));
+      });
+      if (!busy && tm[0]) state = `Next run ${(tm[0].next.split(" ")[2] || "").slice(0, 5)}`;
+    }
+    const ly = p.y + (Math.sin(p.a) < -.1 ? -66 : 68) * S;
+    ctx.fillStyle = busy || wait ? C.ink : rgba(C.ink, .7); ctx.font = `600 ${Math.min(15, 13 * S)}px ${FONT}`; ctx.fillText(s.name, p.x, ly - 8);
+    ctx.fillStyle = busy ? hex : C.mute; ctx.font = `500 ${Math.min(13, 11 * S)}px ${FONT}`; ctx.fillText(state, p.x, ly + 9);
+  });
+
+  // agents orbit their place; helpers orbit their agent
+  for (const a of agents.values()) {
+    const i = ST.findIndex(s => s.id === a.st), p = g.st[i], hex = C[a.st];
+    if (i < 0) { agents.delete(a.key); continue; }
+    const fade = a.dying ? Math.max(0, 1 - (now - a.dying) / 900) : Math.min(1, (now - a.born) / 600);
+    if (a.dying && fade <= 0) { agents.delete(a.key); continue; }
+    const ro = (a.n > 3 ? 48 : 40) * S, ang = phase[a.st] + a.idx * 2 * Math.PI / a.n;
+    const x = p.x + ro * Math.cos(ang), y = p.y + ro * Math.sin(ang);
+    a.x = x; a.y = y;
+    if (a.fresh) { a.fresh = false; burst(x, y, hex, 16); }
+    ctx.globalAlpha = fade;
+    ctx.strokeStyle = rgba(hex, .3); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(x, y); ctx.stroke();
+    if (a.waiting) {
+      const ph = (t * .7 + a.idx * .3) % 1;
+      ctx.strokeStyle = rgba(C.wait, (1 - ph) * .7 * fade); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 6 + ph * 24, 0, 7); ctx.stroke();
+      ctx.strokeStyle = C.wait; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.stroke();
+    } else {
+      halo(hex, x, y, 26 * S * (a.busy ? 1 + Math.sin(t * 5 + a.idx) * .18 : 1), fade);
+      ctx.globalAlpha = fade; dot(x, y, 3.4, "#FFFFFF");
+    }
+    const m = a.helpers.length;
+    if (a.busy) a.hphase += dt * 1.5;
+    a.helpers.forEach((h, j) => {
+      const hc = C[h.role], age = Math.min(1, (now - h.born) / 800), e = 1 - Math.pow(1 - age, 3);
+      const hr = (m > 3 ? 22 : 18) * S * e, ha = a.hphase + j * 2 * Math.PI / m;
+      const hx = x + hr * Math.cos(ha), hy = y + hr * Math.sin(ha);
+      if (age < 1) { ctx.strokeStyle = rgba(hc, (1 - age) * .9); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(hx, hy); ctx.stroke(); }
+      for (let k = 1; k <= 5; k++) { const ta = ha - k * .17; dot(x + hr * Math.cos(ta), y + hr * Math.sin(ta), 2.3 - k * .3, rgba(hc, (.4 - k * .07) * fade)); }
+      halo(hc, hx, hy, 11, fade); ctx.globalAlpha = fade; dot(hx, hy, 2.6, hc);
+    });
+    ctx.globalAlpha = fade; ctx.fillStyle = C.ink; ctx.font = `500 ${Math.min(13, 11 * S)}px ${MONO}`;
+    const out = Math.cos(ang) >= 0; ctx.textAlign = out ? "left" : "right";
+    ctx.fillText(a.label, x + (out ? 1 : -1) * (m ? 26 : 12) * S, y); ctx.textAlign = "center";
+    ctx.globalAlpha = 1;
+  }
+
+  // sparks and shock rings from arrivals and finishes
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const q = parts[k]; q.life -= dt * 1.3;
+    if (q.life <= 0) { parts.splice(k, 1); continue; }
+    q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= .95; q.vy *= .95;
+    halo(q.hex, q.x, q.y, 2 + 7 * q.life, q.life);
+  }
+  for (let k = rings.length - 1; k >= 0; k--) {
+    const r = rings[k], age = (now - r.born) / 1000;
+    if (age > 1) { rings.splice(k, 1); continue; }
+    if (age < 0) continue;
+    ctx.strokeStyle = rgba(r.hex, 1 - age); ctx.lineWidth = .5 + 2.5 * (1 - age);
+    ctx.beginPath(); ctx.arc(r.x, r.y, 6 + age * 70, 0, 7); ctx.stroke();
+  }
+}
+
+let last = 0;
+function frame(ms) { const t = ms / 1000, dt = Math.min(.05, last ? t - last : 0); last = t; draw(t, dt); requestAnimationFrame(frame); }
+if (!reduced) requestAnimationFrame(frame);
+
+/* ---------- side panels ---------- */
+const typed = {};
+function nowText(s) {
+  const m = /^(Running|Reading|Editing|Writing|Searching|Web|Delegating|Answering|Thinking|Queued|Done|Working)(.*)$/s.exec(s || "");
+  return m ? `<span class="verb">${esc(m[1])}</span>${esc(m[2])}` : esc(s);
+}
+function typeInto(el) {
+  const k = el.dataset.type, text = el.dataset.text, caret = el.dataset.busy ? '<span class="caret"></span>' : "";
+  if (reduced || typed[k] === text) { el.innerHTML = nowText(text) + caret; typed[k] = text; return; }
+  typed[k] = text;
+  let i = 0;
+  const step = () => { if (typed[k] !== text) return; el.innerHTML = nowText(text.slice(0, ++i)) + caret; if (i < text.length) setTimeout(step, 16); };
+  step();
+}
+
+let shown = new Set();
+function renderNow(L) {
+  const all = ST.flatMap(s => L[s.id].map(t => ({ ...t, st: s })));
+  const el = $("now");
+  const html = all.length ? all.map(t => `
+    <article class="act ${t.busy ? "busy" : ""} ${t.waiting ? "waiting" : ""} ${shown.has(t.key) ? "" : "new"}" style="--c:var(--${t.st.id})">
+      <header><span class="dot"></span>${esc(t.st.name)}<span class="tag">${esc(t.label)}</span></header>
+      <h3>${esc(t.title)}</h3>
+      <p class="doing" data-type="${esc(t.key)}" data-text="${esc(t.doing)}" data-busy="${t.busy ? 1 : ""}"></p>
+      ${t.helpers.length ? `<ul class="helpers">${t.helpers.map(h => `<li style="--r:var(--${roleKey(h.role)})"><span><b>${esc(ROLE[h.role] || h.role)}</b>${esc(h.task)}</span></li>`).join("")}</ul>` : ""}
+      <p class="meta">${esc(t.meta)}</p>
+    </article>`).join("") : '<p class="empty">Nobody is working right now. Send a job from the Claude app and it lights up here.</p>';
+  shown = new Set(all.map(t => t.key));
+  const key = html.replace(/ new"/g, '"');
+  if (el.dataset.h === key) return;
+  el.dataset.h = key;
+  el.innerHTML = html;
+  el.querySelectorAll(".doing").forEach(typeInto);
+}
+
+const lastSt = {};
+function renderJobs(issues) {
+  const rows = issues.slice(0, 10).map(i => {
+    const st = i.state !== "OPEN" ? (i.labels.includes("failed") ? "failed" : "done")
+      : i.labels.includes("working") ? "working" : i.labels.includes("failed") ? "failed"
+      : i.labels.some(l => l.startsWith("needs-")) ? "waiting" : "new";
+    const flip = lastSt[i.n] && lastSt[i.n] !== st; lastSt[i.n] = st;
+    const word = { working: "Working", waiting: "Waiting", done: "Done", failed: "Failed", new: "New" }[st];
+    return `<div class="row ${flip ? "flip" : ""}"><span class="num">#${i.n}</span><span class="what" title="${esc(i.title)}">${esc(i.title)}</span><span class="st ${st}">${word}</span></div>`;
+  }).join("");
+  const el = $("jobs");
+  if (el.dataset.h !== rows) { el.innerHTML = rows || '<p class="empty">No jobs yet.</p>'; el.dataset.h = rows; }
+}
+
+function count(el, to) {
+  const from = +(el.dataset.v || 0); if (from === to) return; el.dataset.v = to;
+  if (reduced) { el.textContent = to; return; }
+  const t0 = performance.now();
+  const step = n => { const p = Math.min(1, (n - t0) / 700); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+function render(d) {
+  const all = Object.values(lines).flat();
+  const busy = all.filter(t => t.busy).length, helpers = all.reduce((n, t) => n + t.helpers.length, 0), queued = all.filter(t => t.waiting).length;
+  count($("sWork"), busy); count($("sHelp"), helpers); count($("sWait"), queued);
+  count($("sDone"), d.issues.filter(i => i.state !== "OPEN" && !i.labels.includes("failed")).length);
+  $("statWork").classList.toggle("hot", busy > 0);
+  $("headline").innerHTML = busy
+    ? `<b>${plural(busy, "agent")}</b> at work${helpers ? ` with <b>${plural(helpers, "helper")}</b>` : ""}${queued ? `, ${queued} waiting` : ""}.`
+    : queued ? `Nobody working. <b>${plural(queued, "job")}</b> waiting.` : "All quiet. The server is standing by.";
+  renderNow(lines);
+  renderJobs(d.issues);
+
+  const feed = d.feed.map(f => `<li><time>${new Date(f.t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</time><span>${esc(f.msg)}</span></li>`).join("");
+  const fe = $("feed");
+  if (fe.dataset.h !== feed) { fe.innerHTML = feed || '<li><span></span><span class="empty">No pushes today.</span></li>'; fe.dataset.h = feed; }
+
+  const names = { "agent-hq-remote": "Live chat", "agent-hq-worker": "Job worker", tailscaled: "Tailscale", "hq-watch": "Watchdog" };
+  $("signals").innerHTML = Object.entries(d.vm.core).map(([k, v]) =>
+    `<div><i class="${v === "active" ? "on" : ""}" aria-hidden="true"></i>${esc(names[k] || k)}${v === "active" ? "" : ` <span style="color:var(--bad)">${esc(v)}</span>`}</div>`).join("");
+  const m = d.vm.mem, used = m.total ? Math.round(100 * (m.total - m.available) / m.total) : 0;
+  const arc = $("memArc"); arc.style.strokeDashoffset = 263.9 * (1 - used / 100); arc.classList.toggle("high", used > 85);
+  $("memPct").textContent = used + "%";
+  $("memnote").textContent = `${m.available} MB free of ${m.total} MB. Load ${d.vm.load.toFixed(2)}.`;
+}
+
+async function poll() {
+  try {
+    const r = await fetch("status.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+    ST = ST_ALL.filter(s => shows(s, data));
+    lines = collect(data);
+    sync(lines);
+    render(data);
+    $("signal").classList.remove("lost"); $("lost").classList.remove("show");
+  } catch (e) {
+    $("signal").classList.add("lost"); $("lost").classList.add("show");
+  }
+  if (reduced) draw(performance.now() / 1000, 0);
+}
+const clock = () => { $("clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }); };
+clock(); setInterval(clock, 1000);
+poll(); setInterval(poll, 4000);
+</script>
+</body>
+</html>

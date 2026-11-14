@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git push*--mirror*)",
+      "Bash(git -C * push*--force*)",
+      "Bash(git -C * push* -f*)",
+      "Bash(git -C * push * +*)",
+      "Bash(git -c * push*--force*)",
+      "Bash(git filter-branch*)",
+      "Bash(git filter-repo*)",
+      "Bash(gh repo edit*visibility*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh api*visibility*)",
+      "Bash(gh api*private=*)",
+      "Bash(gh secret*)",
+      "Bash(env)",
+      "Bash(printenv*)",
+      "Bash(head *.env*)",
+      "Bash(tail *.env*)",
+      "Bash(less *.env*)",
+      "Bash(more *.env*)",
+      "Bash(grep *.env*)",
+      "Bash(source *.env*)",
+      "Bash(cat *secrets/*)",
+      "Bash(cat *prod_db_url*)",
+      "Bash(cat *.env*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/prod_db_url.txt)",
+      "Read(**/secrets/**)",
+      "PushNotification"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/deploy/chat_hook.py\" 2>/dev/null || true",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

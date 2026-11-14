@@ -1,0 +1,31 @@
+name: selftest
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Runner self-test
+        run: python3 runner.py --selftest
+      - name: Chat hook self-test
+        run: python3 deploy/chat_hook.py --selftest
+      - name: Status page self-test
+        run: python3 deploy/hq_status.py --selftest
+      - name: Shell scripts parse
+        run: for f in deploy/*.sh deploy/hq-push; do bash -n "$f"; done
+      - name: Settings are valid JSON
+        run: python3 -m json.tool .claude/settings.json >/dev/null
+      # Guards for problems already hit once (2026-11-13), so they cannot come back through a doc edit:
+      - name: Agents are never told to read .env or use PushNotification
+        run: |
+          ! grep -nE '(source|cat|\. ) *[^ ]*\.env|NTFY_TOPIC` is in|PushNotification tool (to|for) ' CLAUDE.md ORCHESTRATOR.md .claude/agents/*.md

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Phone push for agents: hq-push "message" [high]
+# Reads the ntfy topic itself, so agents never need to open .env.
+# --data-raw, not -d: with -d a message that starts with @ would upload that file instead of the text.
+set -euo pipefail
+t=${NTFY_TOPIC:-$(sed -n 's/^NTFY_TOPIC=//p' "$HOME/agent-hq/.env" | tr -d '\r')}
+[ -n "$t" ] || { echo "no NTFY_TOPIC" >&2; exit 1; }
+curl -fsS -o /dev/null -w "push %{http_code}\n" -H "Title: Agent HQ" ${2:+-H "Priority: $2"} --data-raw "$1" "https://ntfy.sh/$t"

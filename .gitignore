@@ -1,0 +1,11 @@
+.env
+.runner.lock
+.hb
+logs/
+__pycache__/
+.pause
+.retries
+.token-optimizer/
+# Job attachments can hold personal data: they stay on the runner, out of git history.
+jobs/*/in/
+.rc-ok
