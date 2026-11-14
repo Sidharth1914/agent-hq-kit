@@ -219,7 +219,7 @@ def feed():
 
 
 def status():
-    return {"now": time.time(), "sessions": sessions(), "issues": issues(), "feed": feed(), "vm": services()}
+    return {"now": time.time(), "repo": REPO, "sessions": sessions(), "issues": issues(), "feed": feed(), "vm": services()}
 
 
 def tailnet_owner():

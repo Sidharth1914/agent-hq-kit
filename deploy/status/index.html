@@ -3,28 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0B1338">
+<meta name="theme-color" content="#000000">
 <title>Agent HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Mukta:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* MeroYuva arena palette: light canvas, white cards, navy ink band, blue/red/gold accents */
-  --page: #F5F7FC; --card: #FFFFFF; --line: #E3E8F2; --line-strong: #B9C3E3; --soft: #F6F8FD; --zebra: #FAFBFF;
-  --navy: #0B1338; --navy-2: #16248A; --blue: #3046E8; --red: #E11D2E; --gold: #F6CF24;
-  --text: #1D2433; --muted: #56627A; --on-ink: #CDD4FF; --on-ink-2: #AAB3D6;
-  --ok-bg: #E3F7EC; --ok-tx: #11683A; --bad-bg: #FDE8EA; --bad-tx: #A5101E; --g-bg: #FFF6D6; --g-tx: #7A5600;
-  /* kept names, so the old rules and the map read the new theme */
-  --bg: var(--page); --panel: var(--card); --edge: var(--line); --grid: transparent; --ink: var(--text); --mute: var(--muted);
-  --sky-ink: #FFFFFF; --sky-mute: #AAB3D6;
-  /* places and helper roles: bright enough to glow on the navy map */
-  --chat: #FF4D5E; --worker: #6F86FF; --cloud: #2EC4B6; --laptop: #FF8A3D; --trader: #F6CF24;
-  --developer: #5EEAD4; --researcher: #B8E35A; --designer: #F472B6; --writer: #FFD84D; --reviewer: #FF9F5A; --general: #CBD5E1;
-  --ok: #1F9D55; --bad: #E11D2E; --wait: #FFB020;
-  --display: "Bebas Neue", Impact, sans-serif;
-  --sans: "Mukta", system-ui, "Segoe UI", sans-serif;
-  --mono: "Red Hat Mono", ui-monospace, Consolas, monospace;
+  /* Black observatory: true black page, the map is the only bold thing, colour only where it carries meaning */
+  --page: #000000; --surface: rgba(255,255,255,.028); --surface-2: rgba(255,255,255,.05);
+  --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.16);
+  --text: #F2F3F5; --muted: #8B9099; --faint: #5C616B; --blue: #6E8BFF;
+  --bg: var(--page); --panel: var(--surface); --edge: var(--line); --grid: transparent; --ink: var(--text); --mute: var(--muted);
+  --sky-ink: #F2F3F5; --sky-mute: #8B9099;
+  --chat: #FF6B81; --worker: #6E8BFF; --cloud: #3DD6C6; --laptop: #B48CFF; --trader: #F5C451;
+  --developer: #5EEAD4; --researcher: #B8E35A; --designer: #F472B6; --writer: #FCD34D; --reviewer: #FB923C; --general: #CBD5E1;
+  --ok: #4ADE80; --bad: #F87171; --wait: #F5C451;
+  --sans: "Geist", system-ui, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -225,79 +221,112 @@ body {
 @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
 
-/* ================= MeroYuva arena theme ================= */
-body { background: var(--page); color: var(--text); font-size: 15px; }
-.band { background: linear-gradient(100deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; border-bottom: 4px solid var(--gold); margin-bottom: 22px; }
-.band .hud { padding-top: 16px; padding-bottom: 16px; }
-.brand { font-family: var(--display); font-weight: 400; font-size: 34px; letter-spacing: .03em; line-height: 1; }
-.band .stats { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.06); }
-.band .stat + .stat { box-shadow: inset 1px 0 0 rgba(255,255,255,.14); }
-.band .stat b { font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1; color: #fff; }
-.band .stat span { color: var(--on-ink-2); }
-.band .stat.hot b { color: var(--gold); }
-.band .live { color: var(--on-ink); }
-.lost-msg { background: var(--bad-bg); border-color: #F5B8BF; color: var(--bad-tx); }
+/* ================= Black observatory theme ================= */
+body { background: #000; color: var(--text); font-size: 14.5px; letter-spacing: -.005em; }
+.band { position: sticky; top: 0; z-index: 5; background: rgba(0,0,0,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.band .hud { padding-top: 14px; padding-bottom: 14px; }
+.brand { font-weight: 600; font-size: 18px; letter-spacing: -.02em; gap: 10px; }
+.brand svg { width: 26px; height: 26px; }
+.band .stats { border: 0; background: none; padding: 0; gap: 0; }
+.band .stat { padding: 0 22px; background: none; border: 0; border-radius: 0; }
+.band .stat + .stat { box-shadow: inset 1px 0 0 var(--line); }
+.band .stat b { font-weight: 300; font-size: 28px; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.band .stat span { color: var(--muted); font-size: 13px; }
+.band .stat.hot b { color: var(--chat); font-weight: 400; }
+.band .live { color: var(--muted); font-size: 13px; }
+.lost-msg { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.3); color: #FCA5A5; }
 
-.tile { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(11,19,56,.05), 0 10px 28px -22px rgba(11,19,56,.35); }
-.tile h2 { font-family: var(--display); font-weight: 400; font-size: 26px; letter-spacing: .03em; line-height: 1; color: var(--navy); margin-bottom: 14px; }
-.tile h2::after { content: ""; display: block; width: 36px; height: 3px; margin-top: 7px; border-radius: 2px; background: var(--red); }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: none; padding: 20px; }
+.tile h2 { display: flex; align-items: baseline; gap: 10px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--text); margin: 0 0 16px; }
 
-.sky { border: 0; background: radial-gradient(120% 90% at 50% 42%, #1B2FA8 0%, var(--navy-2) 30%, var(--navy) 72%); }
-.headline { color: var(--on-ink-2); }
-.headline b { color: #fff; }
-.legend { color: var(--on-ink-2); }
-.tip { background: rgba(11,19,56,.96); border-color: rgba(255,255,255,.14); color: #fff; }
-.tip span { color: var(--on-ink); }
+/* the map: no card, the sky opens straight onto the page */
+.sky { background: radial-gradient(60% 55% at 50% 48%, rgba(110,139,255,.07), transparent 70%); border: 0; border-radius: 0; padding: 0; }
+.headline { left: 4px; bottom: 6px; color: var(--muted); font-size: 14px; }
+.headline b { color: var(--text); font-weight: 600; }
+.legend { top: 6px; right: 4px; color: var(--muted); }
+.tip { background: rgba(14,15,18,.96); border-color: var(--line-strong); color: var(--text); border-radius: 10px; }
+.tip span { color: #C5C9D1; }
 
-.act { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; }
+/* right now: one row per agent, the colour lives in the dot and a thin left rule only while busy */
+.acts { gap: 10px; }
+.act { background: transparent; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
 .act:hover { border-color: var(--line-strong); }
-.act.busy { background: #fff; border-color: color-mix(in srgb, var(--c) 45%, var(--line)); box-shadow: 0 8px 22px -18px var(--c); }
-.act.focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(48,70,232,.15); }
-.act header { color: var(--muted); }
-.act .tag, .doing .verb, .helpers b { color: color-mix(in srgb, var(--c, var(--r)) 55%, var(--navy)); }
-.helpers b { color: color-mix(in srgb, var(--r) 55%, var(--navy)); }
-.act .tag { font-weight: 500; }
-.act h3 { color: var(--navy); }
-.doing, .helpers li { color: #3A4560; }
-.act.busy .dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
-.caret { background: var(--blue); }
+.act.busy { background: var(--surface); border-color: color-mix(in srgb, var(--c) 30%, var(--line)); box-shadow: none; }
+.act.focus { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent); }
+.act header { color: var(--muted); font-size: 12.5px; }
+.act .tag { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.act h3 { font-size: 15px; font-weight: 500; color: var(--text); letter-spacing: -.01em; }
+.doing { color: #B9BEC8; font-size: 12.5px; }
+.doing .verb { color: var(--c); }
+.helpers li { color: #B9BEC8; }
+.helpers b { color: var(--r); font-weight: 500; }
+.meta { color: var(--faint); }
+.caret { background: var(--c); }
 
-.row { background: var(--zebra); border: 1px solid var(--line); }
-.row .what b { color: var(--text); }
-.st.working { color: #fff; background: var(--blue); animation: none; }
-.st.waiting { color: var(--g-tx); background: var(--g-bg); }
-.st.done { color: var(--ok-tx); background: var(--ok-bg); }
-.st.failed { color: var(--bad-tx); background: var(--bad-bg); }
-.st.new { color: var(--muted); background: #EEF1F5; }
-.row.working::after { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
+/* jobs and pushes: hairline lists, not boxes */
+.rows { gap: 0; }
+.row { background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 10px 2px; }
+.row:first-child { border-top: 0; }
+.row .num { color: var(--faint); }
+.row .what b { color: var(--text); font-weight: 450; }
+.row .what small { color: var(--faint); }
+.st { font-weight: 500; font-size: 12px; padding: 2px 9px; }
+.st.working { color: var(--cloud); background: rgba(61,214,198,.1); animation: none; }
+.st.waiting { color: var(--wait); background: rgba(245,196,81,.1); }
+.st.done { color: var(--ok); background: rgba(74,222,128,.08); }
+.st.failed { color: var(--bad); background: rgba(248,113,113,.1); }
+.st.new { color: var(--muted); background: var(--surface-2); }
+.row.working::after { background: linear-gradient(90deg, transparent, var(--cloud), transparent); height: 1px; }
+.pushes { gap: 0; }
+.pushes li { padding: 9px 0; border-top: 1px solid var(--line); }
+.pushes li:first-child { border-top: 0; }
+.ico { border-radius: 6px; }
+.ico.start { color: var(--blue); background: rgba(110,139,255,.12); }
+.ico.ok { color: var(--ok); background: rgba(74,222,128,.1); }
+.ico.bad { color: var(--bad); background: rgba(248,113,113,.12); }
+.ico.pause { color: var(--wait); background: rgba(245,196,81,.12); }
+.ico.info { color: var(--muted); background: var(--surface-2); }
 
-.ico.start { color: var(--blue); background: #E8ECFF; }
-.ico.ok { color: var(--ok-tx); background: var(--ok-bg); }
-.ico.bad { color: var(--bad-tx); background: var(--bad-bg); }
-.ico.pause { color: var(--g-tx); background: var(--g-bg); }
-.ico.info { color: var(--muted); background: #EEF1F5; }
+/* server */
+.meter header { color: #C5C9D1; }
+.bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.07); }
+.bar i { border-radius: 2px; background: var(--text); }
+.bar i.high { background: var(--bad); }
+.signals div { color: #C5C9D1; }
+.signals i { background: var(--bad); }
+.signals i.on { background: var(--ok); box-shadow: none; }
 
-.bar { background: #EEF2FB; }
-.bar i { background: var(--blue); }
-.bar i.high { background: var(--red); }
-.signals div { color: var(--text); }
-.signals i { background: var(--red); }
-.signals i.on { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-bg); }
+.next h3 { color: var(--muted); font-weight: 500; }
+.next ul { gap: 0; }
+.next li { background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 8px 2px; }
+.next li:first-child { border-top: 0; }
+.next time { color: var(--trader); font-weight: 500; font-variant-numeric: tabular-nums; }
+.rest b { color: var(--text); font-weight: 600; }
+.toast { background: rgba(14,15,18,.96); border-color: var(--line-strong); color: var(--text); box-shadow: 0 20px 40px -16px #000; }
 
-.next li { background: var(--soft); border: 1px solid var(--line); }
-.next time { color: var(--g-tx); font-weight: 600; }
-.rest b { color: var(--navy); }
-.toast { background: #fff; border-color: var(--line); color: var(--text); box-shadow: 0 18px 40px -18px rgba(11,19,56,.45); }
-
-::selection { background: rgba(48,70,232,.22); color: var(--navy); }
-* { scrollbar-color: var(--line-strong) transparent; }
+::selection { background: rgba(110,139,255,.35); color: #fff; }
+* { scrollbar-color: rgba(255,255,255,.14) transparent; }
 :focus-visible { outline-color: var(--blue); }
 @media (max-width: 1100px) {
-  .band .stats { border: 0; background: none; }
-  .band .stat, .band .stat + .stat { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); box-shadow: none; }
-  .band .stat b { font-size: 26px; }
-  .band { margin-bottom: 16px; }
+  .band .stats { flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .band .stat { padding: 2px 6px; align-items: flex-start; text-align: left; border: 0; }
+  .band .stat:first-child { padding-left: 0; }
+  .band .stat + .stat { box-shadow: inset 1px 0 0 var(--line); padding-left: 12px; }
+  .band .stat b { font-size: 24px; }
+  .band { margin-bottom: 8px; }
+  .sky { min-height: 480px; }
 }
+
+/* links to GitHub, heading counts, call to action, bigger phone map */
+a.row { color: inherit; text-decoration: none; transition: border-color .15s, background .15s; }
+a.row:hover { background: var(--surface); }
+.tile h2 .count { font-size: 13px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tile h2 .count:empty { display: none; }
+.cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; padding: 10px 18px; border-radius: 10px; background: var(--text); color: #000;
+  font-weight: 600; text-decoration: none; transition: background .15s; }
+.cta:hover { background: #fff; }
+.cta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -306,8 +335,8 @@ body { background: var(--page); color: var(--text); font-size: 15px; }
 <div class="band"><header class="hud">
   <div class="brand"><svg viewBox="0 0 34 34" aria-hidden="true">
     <circle cx="17" cy="17" r="6" fill="#FFFFFF"/>
-    <g class="spin"><circle cx="17" cy="17" r="13" fill="none" stroke="#F6CF24" stroke-width="2" stroke-dasharray="4 5"/>
-    <circle cx="30" cy="17" r="3" fill="#FF4D5E"/><circle cx="6" cy="10" r="2.4" fill="#6F86FF"/></g></svg>Agent HQ</div>
+    <g class="spin"><circle cx="17" cy="17" r="13" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="2" stroke-dasharray="4 5"/>
+    <circle cx="30" cy="17" r="3" fill="#FF6B81"/><circle cx="6" cy="10" r="2.4" fill="#3DD6C6"/></g></svg>Agent HQ</div>
   <div class="stats">
     <div class="stat" id="statWork"><b id="sWork">0</b><span>agents working</span></div>
     <div class="stat"><b id="sHelp">0</b><span>helpers</span></div>
@@ -328,8 +357,8 @@ body { background: var(--page); color: var(--text); font-size: 15px; }
     <div class="tip" id="tip" role="tooltip"></div>
   </section>
   <section class="tile now"><h2>Right now</h2><div class="acts" id="now"></div></section>
-  <section class="tile jobs"><h2>Jobs</h2><div class="rows" id="jobs"></div></section>
-  <section class="tile feed"><h2>Phone pushes</h2><ul class="pushes" id="feed"></ul></section>
+  <section class="tile jobs"><h2>Jobs<span class="count" id="jobsN"></span></h2><div class="rows" id="jobs"></div></section>
+  <section class="tile feed"><h2>Phone pushes<span class="count" id="feedN"></span></h2><ul class="pushes" id="feed"></ul></section>
   <section class="tile server"><h2>Server</h2>
     <div class="meters">
       <div class="meter"><header>Memory<span id="memTxt"></span></header><div class="bar"><i id="memBar"></i></div></div>
@@ -364,7 +393,7 @@ const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const ago = s => s < 60 ? "just now" : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`;
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-const FONT = "Mukta, system-ui, sans-serif", MONO = "Red Hat Mono, Consolas, monospace";
+const FONT = "Geist, system-ui, sans-serif", MONO = "Geist Mono, Consolas, monospace";
 
 /* ---------- data: who is working where ---------- */
 const emptyLines = () => ({ chat: [], worker: [], cloud: [], laptop: [], trader: [] });
@@ -445,7 +474,7 @@ new ResizeObserver(resize).observe(cv);
 
 function geo(t) {
   const k = reduced ? 1 : 1 - Math.pow(1 - Math.min(1, (t * 1000 - T0) / 1700), 4);
-  const cx = W / 2, cy = H / 2 - 10, ry = H * .3 * k, rx = Math.min(W * .36, H * .3 * 1.75) * k;
+  const cx = W / 2, cy = H / 2 - 10, ry = H * (W < 640 ? .33 : .3) * k, rx = Math.min(W * (W < 640 ? .41 : .36), H * .3 * 1.75) * k;
   return { cx, cy, k, st: ST.map((s, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / ST.length; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a }; }) };
 }
 
@@ -466,7 +495,7 @@ function sync(L) {
 
 function draw(t, dt) {
   if (!W) return;
-  const now = t * 1000, g = geo(t), S = Math.max(.82, Math.min(1.45, Math.min(W, H * 1.4) / 640));
+  const now = t * 1000, g = geo(t), S = Math.max(W < 640 ? 1 : .82, Math.min(1.45, Math.min(W, H * 1.4) / 640));
   ctx.clearRect(0, 0, W, H);
 
   for (const d of dust) {   // slow drifting dust
@@ -522,7 +551,7 @@ function draw(t, dt) {
   // the core: the server everything runs through
   const pr = 1 + Math.sin(t * (busyAll ? 3.2 : 1.1)) * (busyAll ? .09 : .04);
   halo(busyAll ? "#7FA8FF" : "#5B6B9A", g.cx, g.cy, 78 * S * pr, busyAll ? .95 : .6);
-  dot(g.cx, g.cy, 21 * S, "#0B1338");
+  dot(g.cx, g.cy, 21 * S, "#07080A");
   ctx.strokeStyle = "rgba(220,230,255,.9)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(g.cx, g.cy, 21 * S, 0, 7); ctx.stroke();
   ring(g.cx, g.cy, 33 * S, t * .3, [3, 7], "rgba(160,190,255,.5)");
   ring(g.cx, g.cy, 45 * S, -t * .17, [16, 10], "rgba(160,190,255,.22)", 2);
@@ -533,7 +562,7 @@ function draw(t, dt) {
   ST.forEach((s, i) => {
     const p = g.st[i], hex = C[s.id], { busy, wait } = stat[i];
     if (busy) halo(hex, p.x, p.y, (54 + Math.sin(t * 2 + i) * 5) * S, .5);
-    dot(p.x, p.y, 17 * S, "#0B1338");
+    dot(p.x, p.y, 17 * S, "#07080A");
     ctx.strokeStyle = rgba(hex, busy || wait ? 1 : .45); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 17 * S, 0, 7); ctx.stroke();
     ctx.fillStyle = rgba(hex, busy || wait ? 1 : .7); ctx.font = `800 ${13 * S}px ${FONT}`; ctx.fillText(s.letter, p.x, p.y + 1);
     let state = busy ? `${busy} working` : wait ? `${wait} waiting` : "Quiet";
@@ -681,10 +710,10 @@ function renderNow(L) {
       ${t.helpers.length ? `<ul class="helpers">${t.helpers.map(h => `<li style="--r:var(--${roleKey(h.role)})"><span><b>${esc(ROLE[h.role] || h.role)}</b>${esc(h.task)}</span></li>`).join("")}</ul>` : ""}
       <p class="meta">${esc(t.meta)}</p>
     </article>`).join("") : `<div class="rest"><svg class="rest-art" viewBox="0 0 120 120" aria-hidden="true">
-      <circle cx="60" cy="60" r="9" fill="#0B1338"/>
-      <g class="o1"><circle cx="60" cy="60" r="30" fill="none" stroke="#B9C3E3" stroke-dasharray="3 6"/><circle cx="90" cy="60" r="4" fill="${C.chat}"/></g>
-      <g class="o2"><circle cx="60" cy="60" r="50" fill="none" stroke="#D5DCEE" stroke-dasharray="2 8"/><circle cx="60" cy="10" r="3" fill="${C.cloud}"/><circle cx="25" cy="95" r="2.5" fill="${C.laptop}"/></g>
-    </svg><p><b>Everyone is resting.</b>Send a job from the Claude app and it lights up here.</p></div>`;
+      <circle cx="60" cy="60" r="9" fill="#F2F3F5"/>
+      <g class="o1"><circle cx="60" cy="60" r="30" fill="none" stroke="rgba(255,255,255,.22)" stroke-dasharray="3 6"/><circle cx="90" cy="60" r="4" fill="${C.chat}"/></g>
+      <g class="o2"><circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,.12)" stroke-dasharray="2 8"/><circle cx="60" cy="10" r="3" fill="${C.cloud}"/><circle cx="25" cy="95" r="2.5" fill="${C.laptop}"/></g>
+    </svg><p><b>Everyone is resting.</b>Send a job from the Claude app and it lights up here.</p>${issueUrl("new") ? `<a class="cta" href="${issueUrl("new")}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Give a job</a>` : ""}</div>`;
   html += upNext();
   shown = new Set(all.map(t => t.key));
   const key = html.replace(/ new"/g, '"');
@@ -705,8 +734,11 @@ function renderJobs(issues) {
     if (flip && st === "working") toast("start", `#${i.n} started: ${i.title}`);
     if (flip && st === "done") toast("ok", `#${i.n} done: ${i.title}`);
     if (flip && st === "failed") toast("bad", `#${i.n} failed: ${i.title}`);
-    return `<div class="row ${st} ${flip ? "flip" : ""}"><span class="num">#${i.n}</span><span class="what" title="${esc(i.title)}"><b>${esc(i.title)}</b><small>${updated(i.updated)}</small></span><span class="st ${st}">${word}</span></div>`;
+    const u = issueUrl(i.n), tag = u ? `a href="${u}" target="_blank" rel="noopener"` : "div";
+    return `<${tag} class="row ${st} ${flip ? "flip" : ""}"><span class="num">#${i.n}</span><span class="what" title="${esc(i.title)}"><b>${esc(i.title)}</b><small>${updated(i.updated)}</small></span><span class="st ${st}">${word}</span></${u ? "a" : "div"}>`;
   }).join("");
+  const open = issues.filter(i => i.state === "OPEN").length;
+  $("jobsN").textContent = issues.length ? (open ? `${open} open` : "all closed") : "";
   const el = $("jobs");
   if (el.dataset.h !== rows) { el.innerHTML = rows || '<p class="empty">No jobs yet.</p>'; el.dataset.h = rows; }
 }
@@ -744,6 +776,7 @@ function render(d) {
     rings.push({ x: W / 2, y: H / 2 - 10, hex: k === "bad" ? "#F87171" : k === "ok" ? "#4ADE80" : "#7FA8FF", born: performance.now() });
   }
   lastPush = newest || lastPush;
+  $("feedN").textContent = d.feed.length ? `${d.feed.length} today` : "";
   const fe = $("feed");
   if (fe.dataset.h !== feed) { fe.innerHTML = feed || '<li><span></span><span class="empty">No pushes today.</span></li>'; fe.dataset.h = feed; }
 
@@ -764,6 +797,7 @@ const ICON = {
   pause: '<path d="M9 5.5v13M15 5.5v13"/>', info: '<path d="M12 8v.01M12 11.5v5"/>' };
 const kindOf = m => /^\s*▶/.test(m) ? "start" : /^\s*✅/.test(m) ? "ok" : /^\s*(❌|⚠)/.test(m) ? "bad" : /^\s*⏸/.test(m) ? "pause" : "info";
 const since = t => { const s = Date.now() / 1000 - t; return s < 60 ? "now" : s < 3600 ? `${Math.round(s / 60)} min` : s < 86400 ? `${Math.round(s / 3600)} h` : `${Math.round(s / 86400)} d`; };
+const issueUrl = n => data && /^[\w.-]+\/[\w.-]+$/.test(data.repo || "") ? `https://github.com/${data.repo}/issues/${n}` : "";
 function bar(id, pct, warn) { const e = $(id); e.style.width = pct + "%"; e.classList.toggle("high", pct > warn); }
 
 function toast(kind, text) {
